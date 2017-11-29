@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "skelet_CS", "skelet_CS.csproj", "{20451649-9F5A-453E-B2BE-38EBCFDE46A0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pbrain-ArcadeV42", "pbrain-ArcadeV42.csproj", "{20451649-9F5A-453E-B2BE-38EBCFDE46A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
