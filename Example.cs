@@ -6,13 +6,13 @@ class GomocupEngine : GomocupInterface
 	const int MAX_BOARD = 100;
 	int[,] board = new int[MAX_BOARD, MAX_BOARD];
 	Random rand = new Random();
-	int[][] lines = new int[24][];
+	int[][] lines = new int[28][];
 
 	public override string brain_about
 	{
 		get
 		{
-			return "name=\"Random\", author=\"Petr Lastovicka\", version=\"1.1\", country=\"Czech Republic\", www=\"http://petr.lastovicka.sweb.cz\"";
+			return "name=\"ArcadeV42\", author=\"Machin Truc\", version=\"1.1\", country=\"France\", www=\"http://talkaround.io\"";
 		}
 	}
 
@@ -133,10 +133,12 @@ class GomocupEngine : GomocupInterface
 		int i;
 		i = -1;
 		int[] res = new int[2];
+        res[0] = -1;
+        res[1] = -1;
 		do
 		{
-			res = Algo();
-		} while (!isFree(res[0], res[1]));
+            res = Algo();
+        } while (!isFree(res[0], res[1]));
 		//if (i > 1) Console.WriteLine("DEBUG {0} coordinates didn't hit an empty field", i);
 		do_mymove(res[0], res[1]);
 	}
@@ -153,10 +155,11 @@ class GomocupEngine : GomocupInterface
 
 	private int[] Algo()
 	{
-		int[][,] resTable = new int[(width - 4) * (height -4)][,];
-		for (int id = 0; id != (width - 4) * (height -4); id++)
+		int[][,] resTable = new int[(width - 4) * (height - 4)][,];
+        for (int id = 0; id != (width - 4) * (height - 4); id++)
 		{
-			ReturnSubTable(id, ref resTable[id]);
+            resTable[id] = new int[5, 5];
+            ReturnSubTable(id, ref resTable[id]);
 			FillSubTable(ref resTable[id]);
 		}
 		return SetResBoard(resTable);
