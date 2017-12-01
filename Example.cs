@@ -130,19 +130,15 @@ class GomocupEngine : GomocupInterface
 
 	public override void brain_turn()
 	{
-		int x, y, i;
-
+		int i;
 		i = -1;
+		int[] res = new int[2];
 		do
 		{
-			x = rand.Next(width);
-			y = rand.Next(height);
-			i++;
-			if (terminate != 0) return;
-		} while (!isFree(x, y));
-
-		if (i > 1) Console.WriteLine("DEBUG {0} coordinates didn't hit an empty field", i);
-		do_mymove(x, y);
+			res = Algo();
+		} while (!isFree(res[0], res[1]));
+		//if (i > 1) Console.WriteLine("DEBUG {0} coordinates didn't hit an empty field", i);
+		do_mymove(res[0], res[1]);
 	}
 
 	public override void brain_end()
@@ -155,51 +151,35 @@ class GomocupEngine : GomocupInterface
 
     // ALGO
 
-	void Algo()
+	private int[] Algo()
 	{
-		
+		int[][,] resTable = new int[(width - 4) * (height -4)][,];
+		for (int id = 0; id != (width - 4) * (height -4); id++)
+		{
+			ReturnSubTable(id, ref resTable[id]);
+			FillSubTable(ref resTable[id]);
+		}
+		return SetResBoard(resTable);
 	}
 
-    int[,] ReturnSubTable(int id)
+    private void ReturnSubTable(int id, ref int[,] subTable)
     {
         int x = (id % (width - 4)) - 2;
         int y = (id / (height - 4)) - 2;
-        int[,] res = new int[5, 5];
 
         for (int a = 0; a != 5; a += 1)
         {
             for (int b = 0; b != 5; b += 1)
             {
-                res[a, b] = board[x, y];
+                subTable[a, b] = board[x, y];
                 x += 1;
             }
             x = (id % (width - 4)) - 2;
             y += 1;
         }
-        return res;
     }
 
-	void MakeSquare(int square, ref int enNb, ref int alNb, ref int emNb)
-	{
-		switch (square)
-		{
-			case 1:
-				alNb += 1;
-				emNb = (enNb == 0 ? emNb : 0);
-				enNb = 0;
-				break;
-			case -1:
-				enNb += 1;
-				emNb = (alNb == 0 ? emNb : 0);
-				alNb = 0;
-				break;
-			default:
-				emNb += 1;
-				break;
-		}		
-	}
-
-	void SetBack(ref int[,] subTable, int[] line, ref int enNb, ref int alNb, ref int emNb)
+	private void SetBack(ref int[,] subTable, int[] line, ref int enNb, ref int alNb, ref int emNb)
 	{
 		int y = line[1];
 		int x = line[0];
@@ -220,7 +200,7 @@ class GomocupEngine : GomocupInterface
 		emNb = 0;
 	}
 
-	void FillSubTable(int[,] subTable)
+	private void FillSubTable(ref int[,] subTable)
 	{
 		foreach (int[] line in lines)
 		{
@@ -259,58 +239,29 @@ class GomocupEngine : GomocupInterface
 		}
 	}
 
-/*
-	void FillSubTable(int[,] subTable)
+	private int[] SetResBoard(int[][,] resTable)
 	{
-		int x;
-		int y;
-		int enNb = 0; // enemy number
-		int alNb = 0; // ally number
-		int emNb = 0; // empty number
+		int[,] finalTable = new int[width,height];
+		int id = 0;
+		int max = 0;
+		int[] maxSquare = new int[2];
 		
-		for (y = 0; y != 5; y += 1)
+		while (id != resTable.Length)
 		{
-			for (x = 0; x != 5; x += 1)
+			for (int y = 0; y != 5; y++)
 			{
-				MakeSquare(subTable[x, y], ref enNb, ref alNb, ref emNb);
-			}
-			for (x = 0; x != 5; x += 1)
-			{
-				if (subTable[x, y] == 0 || (subTable[x, y] != 1 && subTable[x, y] != -1))
-					subTable[x, y] += (alNb + enNb + (emNb / 2)) * (alNb + enNb + (emNb / 2)) + (alNb > 0 ? 1 : 0);
-			}
-		}
-		for (x = 0; x != 5; x += 1)
-		{
-			for (y = 0; y != 5; y += 1)
-			{
-				MakeSquare(subTable[x, y], ref enNb, ref alNb, ref emNb);
-			}
-			for (y = 0; y != 5; y += 1)
-			{
-				if (subTable[x, y] == 0 || (subTable[x, y] != 1 && subTable[x, y] != -1))
-					subTable[x, y] += (alNb + enNb + (emNb / 2)) * (alNb + enNb + (emNb / 2)) + (alNb > 0 ? 1 : 0);
-			}
-		}
-		alNb = 0;
-		enNb = 0;
-		emNb = 0;
-		y = 0;
-		x = 0;
-		for (int k = 0 ; k < 5 * 2 ; k++ )
-		{
-			for (y = 0 ; y <= k ; y++ )
-			{
-				x = k - y;
-				if( x < 5 && y < 5 ) {
-					MakeSquare(subTable[x, y], ref enNb, ref alNb, ref emNb);
+				for (int x = 0; x != 5; x++)
+				{
+					finalTable[(id % (width - 4)) - 2, (id / (height - 4)) - 2] += resTable[id][x, y];
+					if (finalTable[(id % (width - 4)) - 2, (id / (height - 4)) - 2] > max)
+					{
+						max = finalTable[(id % (width - 4)) - 2, (id / (height - 4)) - 2];
+						maxSquare[0] = (id % (width - 4)) - 2;
+						maxSquare[1] = (id / (height - 4)) - 2;
+					}
 				}
 			}
 		}
-	}
-*/
-	void SetResBoard()
-	{
-		
+		return maxSquare;
 	}
 }
