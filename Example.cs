@@ -156,31 +156,30 @@ class GomocupEngine : GomocupInterface
 	private int[] Algo()
 	{
 		int[][,] resTable = new int[(width - 4) * (height - 4)][,];
-        for (int id = 0; id != (width - 4) * (height - 4); id++)
+		for (int id = 0; id != (width - 4) * (height - 4); id++)
 		{
-            resTable[id] = new int[5, 5];
-            ReturnSubTable(id, ref resTable[id]);
+			resTable[id] = new int[5, 5];
+			ReturnSubTable(id, ref resTable[id]);
 			FillSubTable(ref resTable[id]);
 		}
 		return SetResBoard(resTable);
 	}
 
-    private void ReturnSubTable(int id, ref int[,] subTable)
-    {
-        int x = (id % (width - 4)) - 2;
-        int y = (id / (height - 4)) - 2;
-
-        for (int a = 0; a != 5; a += 1)
-        {
-            for (int b = 0; b != 5; b += 1)
-            {
-                subTable[a, b] = board[x, y];
-                x += 1;
-            }
-            x = (id % (width - 4)) - 2;
-            y += 1;
-        }
-    }
+	private void ReturnSubTable(int id, ref int[,] subTable)
+	{
+		int x = id % (width - 4);
+		int y = id / (height - 4);
+		for (int a = 0; a != 5; a += 1)
+		{
+			for (int b = 0; b != 5; b += 1)
+			{
+				subTable[a, b] = board[x, y];
+				x += 1;
+			}
+			x = id % (width - 4);
+			y += 1;
+		}
+	}
 
 	private void SetBack(ref int[,] subTable, int[] line, ref int enNb, ref int alNb, ref int emNb)
 	{
@@ -249,22 +248,51 @@ class GomocupEngine : GomocupInterface
 		int max = 0;
 		int[] maxSquare = new int[2];
 		
-		while (id != resTable.Length)
+		while (id != (width - 4) * (height - 4))
 		{
 			for (int y = 0; y != 5; y++)
 			{
 				for (int x = 0; x != 5; x++)
 				{
-					finalTable[(id % (width - 4)) - 2, (id / (height - 4)) - 2] += resTable[id][x, y];
-					if (finalTable[(id % (width - 4)) - 2, (id / (height - 4)) - 2] > max)
+					finalTable[id % (width - 4), id / (height - 4)] += resTable[id][x, y];
+					if (finalTable[id % (width - 4), id / (height - 4)] > max)
 					{
-						max = finalTable[(id % (width - 4)) - 2, (id / (height - 4)) - 2];
-						maxSquare[0] = (id % (width - 4)) - 2;
-						maxSquare[1] = (id / (height - 4)) - 2;
+						max = finalTable[id % (width - 4), id / (height - 4)];
+						maxSquare[0] = id % (width - 4);
+						maxSquare[1] = id / (height - 4);
 					}
 				}
 			}
+			id++;
+		}
+		if (max == 0)
+		{
+			do
+			{
+				maxSquare[0] = rand.Next(width);
+				maxSquare[1] = rand.Next(height);
+			} while (!isFree(maxSquare[0], maxSquare[1]));
 		}
 		return maxSquare;
+	}
+
+	public void PrintBoard(int[,] board)
+	{
+		for (int y = 0; y != height; y++)
+		{
+			for (int x = 0; x != width; x++)
+			{
+				Console.Write(board[x, y]);
+				if (board[x, y] >= 10)
+					Console.Write(" ");
+				if (board[x, y] >= 100)
+					Console.Write(" ");
+				if (board[x, y] >= 1000)
+					Console.Write(" ");
+				if (board[x, y] >= 10000)
+					Console.Write("error");
+			}
+			Console.Write("\n");
+		}
 	}
 }
