@@ -155,17 +155,17 @@ class GomocupEngine : GomocupInterface
 
 	public int[] Algo()
 	{
-		int[][,] resTable = new int[(width - 4) * (height - 4)][,];
+		double[][,] resTable = new double[(width - 4) * (height - 4)][,];
 		for (int id = 0; id != (width - 4) * (height - 4); id++)
 		{
-			resTable[id] = new int[5, 5];
+			resTable[id] = new double[5, 5];
 			ReturnSubTable(id, ref resTable[id]);
 			FillSubTable(ref resTable[id]);
 		}
 		return SetResBoard(resTable);
 	}
 
-	private void ReturnSubTable(int id, ref int[,] subTable)
+	private void ReturnSubTable(int id, ref double[,] subTable)
 	{
 		int x = id % (width - 4);
 		int y = id / (height - 4);
@@ -181,35 +181,52 @@ class GomocupEngine : GomocupInterface
 		}
 	}
 
-	private void SetBack(ref int[,] subTable, int[] line, ref int enNb, ref int alNb, ref int emNb)
+	private void SetBack(ref double[,] subTable, int[] line, ref int enNb, ref int alNb, ref int emNb)
 	{
-		if (emNb >= 3 || emNb == 0 || (enNb == 0 && alNb == 0))
-			return;
 		int y = line[1];
 		int x = line[0];
-		if (enNb != 0 && alNb != 0)
-		{
-			while (true)
-			{
-				if (subTable[x, y] == (enNb == 0 ? -1 : -2) || (y == line[3] && x == line[2]))
-					break;
-				x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
-				y += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
-			}
-		}
-		while (true)
-		{
-			if (subTable[x, y] != -1 && subTable[x, y] != -2)
-				subTable[x, y] += MyPower(enNb != 0 ? enNb : alNb, 10);// + (enNb != 0 ? 0 : 1);
-			if (y == line[3] && x == line[2])
+        while (true)
+        {
+            if (subTable[x, y] != (enNb != 0 ? -1 : -2))
+            {
+                int after = 0;
+                int before = 0;
+                int x2 = x;
+                int y2 = y;
+                while (true)
+                {
+                    if (subTable[x2, y2] != (enNb != 0 ? -1 : -2))
+                        after++;
+                    else
+                        break;
+                    if ((y2 == line[3] && x2 == line[2]))
+                        break;
+                    x2 += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
+                    y2 += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
+                }
+                x2 = x;
+                y2 = y;
+                while (true)
+                {
+                    if (subTable[x2, y2] != (enNb != 0 ? -1 : -2))
+                        before++;
+                    else
+                        break;
+                    if ((y2 == line[1] && x2 == line[0]))
+                        break;
+                    x2 -= (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
+                    y2 -= (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
+                }
+                subTable[x, y] += MyPower((enNb != 0 ? enNb : alNb) + (1 / MyPower(2, MyPower(after < before ? after : before, 2))), 2) + (alNb != 0 ? 1 : 0);
+            }
+            if (y == line[3] && x == line[2])
 				break;
 			x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
 			y += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
 		}
-		emNb = 0;
-	}
+    }
 
-	private void FillSubTable(ref int[,] subTable)
+	private void FillSubTable(ref double[,] subTable)
 	{
 		foreach (int[] line in lines)
 		{
@@ -220,41 +237,35 @@ class GomocupEngine : GomocupInterface
 			int emNb = 0;
 			while (true)
 			{
-				switch (subTable[x, y])
-				{
-					case -1:
-						if (alNb != 0 && emNb != 0)
-							SetBack(ref subTable, line, ref enNb, ref alNb, ref emNb);
-						enNb += 1;
-						alNb = 0;
-						break;
-					case -2:
-						if (enNb != 0 && emNb != 0)
-							SetBack(ref subTable, line, ref enNb, ref alNb, ref emNb);
-						alNb += 1;
-						enNb = 0;
-						break;
-					case -3:
-						break;
-					default:
-						emNb += 1;
-						break;
-				}
+                switch (subTable[x, y])
+                {
+                    case -1:
+                        enNb += 1;
+                        break;
+                    case -2:
+                        alNb += 1;
+                        break;
+                    case -3:
+                        break;
+                    default:
+                        emNb += 1;
+                        break;
+                }
 				if (y == line[3] && x == line[2])
 					break;
 				x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
 				y += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
 			}
-			if (emNb != 0)
+			if (emNb != 5 && (enNb + emNb == 5 || alNb + emNb == 5))
 				SetBack(ref subTable, line, ref enNb, ref alNb, ref emNb);
 		}
 	}
 
-	private int[] SetResBoard(int[][,] resTable)
+	private int[] SetResBoard(double[][,] resTable)
 	{
-		int[,] finalTable = new int[width, height];
+		double[,] finalTable = new double[width, height];
 		int id = 0;
-		int max = 0;
+		double max = 0;
 		int[] maxSquare = new int[2];
 
 		for (int y = 0; y != height; y++)
@@ -273,7 +284,8 @@ class GomocupEngine : GomocupInterface
 					if (finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] != -1 &&
 						finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] != -2 && resTable[id][x, y] != 0)
 					{
-						finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] += resTable[id][x, y];
+                        if (resTable[id][x, y] > finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y])
+						    finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] = resTable[id][x, y];
 					}
 					if (finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] > max)
 					{
@@ -297,7 +309,7 @@ class GomocupEngine : GomocupInterface
 		return maxSquare;
 	}
 
-	public void PrintBoard(int[,] board)
+	public void PrintBoard(double[,] board)
 	{
 		int Size = 0;
 		if (board.Length == 25)
@@ -316,7 +328,7 @@ class GomocupEngine : GomocupInterface
 		Console.WriteLine("\n");
 	}
 
-	private int	MyPower(int nb, int power)
+	private double MyPower(double nb, double power)
 	{
 		nb = power < 0 ? 0 : nb;
 		power = power - 1;
