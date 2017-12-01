@@ -183,7 +183,7 @@ class GomocupEngine : GomocupInterface
 
 	private void SetBack(ref int[,] subTable, int[] line, ref int enNb, ref int alNb, ref int emNb)
 	{
-		if (emNb == 5 || emNb == 0 || (enNb == 0 && alNb == 0))
+		if (emNb >= 3 || emNb == 0 || (enNb == 0 && alNb == 0))
 			return;
 		int y = line[1];
 		int x = line[0];
@@ -200,7 +200,7 @@ class GomocupEngine : GomocupInterface
 		while (true)
 		{
 			if (subTable[x, y] != -1 && subTable[x, y] != -2)
-				subTable[x, y] += MyPower(enNb != 0 ? enNb : alNb, 10) + (enNb != 0 ? 0 : 1);
+				subTable[x, y] += MyPower(enNb != 0 ? enNb : alNb, 10);// + (enNb != 0 ? 0 : 1);
 			if (y == line[3] && x == line[2])
 				break;
 			x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
@@ -252,11 +252,18 @@ class GomocupEngine : GomocupInterface
 
 	private int[] SetResBoard(int[][,] resTable)
 	{
-		int[,] finalTable = board;
+		int[,] finalTable = new int[width, height];
 		int id = 0;
 		int max = 0;
 		int[] maxSquare = new int[2];
-		
+
+		for (int y = 0; y != height; y++)
+		{
+			for (int x = 0; x != width; x++)
+			{
+				finalTable[x, y] = board[x, y];
+			}
+		}
 		while (id != (width - 4) * (height - 4))
 		{
 			for (int y = 0; y != 5; y++)
@@ -286,6 +293,7 @@ class GomocupEngine : GomocupInterface
 				maxSquare[1] = rand.Next(height);
 			} while (!isFree(maxSquare[0], maxSquare[1]));
 		}
+		//PrintBoard(finalTable);
 		return maxSquare;
 	}
 
@@ -300,21 +308,17 @@ class GomocupEngine : GomocupInterface
 		{
 			for (int x = 0; x != Size; x++)
 			{
-				Console.Write(board[x, y]);
-				if (board[x, y] < 0)
-					Console.Write(" ");
-				else if (board[x, y] < 10)
-					Console.Write("  ");
-				else if (board[x, y] < 100)
-					Console.Write(" ");
+				Console.Write(board[x, y] * -1);
+				Console.Write(" ");
 			}
 			Console.Write("\n");
 		}
+		Console.WriteLine("\n");
 	}
-	
+
 	private int	MyPower(int nb, int power)
 	{
-		nb = (power < 0) ? 0 : nb;
+		nb = power < 0 ? 0 : nb;
 		power = power - 1;
 		if (power != 0 && nb != 0)
 			nb = nb * MyPower(nb, power);
