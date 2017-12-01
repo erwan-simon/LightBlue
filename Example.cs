@@ -200,7 +200,7 @@ class GomocupEngine : GomocupInterface
 		while (true)
 		{
 			if (subTable[x, y] != -1 && subTable[x, y] != -2)
-				subTable[x, y] += (enNb != 0 ? enNb : alNb) * (enNb != 0 ? enNb : alNb) + (enNb != 0 ? 0 : 1);
+				subTable[x, y] += MyPower(enNb != 0 ? enNb : alNb, 10) + (enNb != 0 ? 0 : 1);
 			if (y == line[3] && x == line[2])
 				break;
 			x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
@@ -310,5 +310,14 @@ class GomocupEngine : GomocupInterface
 			}
 			Console.Write("\n");
 		}
+	}
+	
+	private int	MyPower(int nb, int power)
+	{
+		nb = (power < 0) ? 0 : nb;
+		power = power - 1;
+		if (power != 0 && nb != 0)
+			nb = nb * MyPower(nb, power);
+		return nb;
 	}
 }
