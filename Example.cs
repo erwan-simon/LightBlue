@@ -153,7 +153,7 @@ class GomocupEngine : GomocupInterface
 
     // ALGO
 
-	private int[] Algo()
+	public int[] Algo()
 	{
 		int[][,] resTable = new int[(width - 4) * (height - 4)][,];
 		for (int id = 0; id != (width - 4) * (height - 4); id++)
@@ -173,7 +173,7 @@ class GomocupEngine : GomocupInterface
 		{
 			for (int b = 0; b != 5; b += 1)
 			{
-				subTable[a, b] = board[x, y];
+				subTable[b, a] = board[x, y];
 				x += 1;
 			}
 			x = id % (width - 4);
@@ -183,19 +183,26 @@ class GomocupEngine : GomocupInterface
 
 	private void SetBack(ref int[,] subTable, int[] line, ref int enNb, ref int alNb, ref int emNb)
 	{
+		if (emNb == 5 || emNb == 0 || (enNb == 0 && alNb == 0))
+			return;
 		int y = line[1];
 		int x = line[0];
-		while (y != line[3] || x != line[2])
+		if (enNb != 0 && alNb != 0)
 		{
-			if (subTable[x, y] == (enNb != 0 ? -1 : -2))
-				break;
-			x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
-			y += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));			
+			while (true)
+			{
+				if (subTable[x, y] == (enNb == 0 ? -1 : -2) || (y == line[3] && x == line[2]))
+					break;
+				x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
+				y += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
+			}
 		}
-		while (y != line[3] || x != line[2])
+		while (true)
 		{
 			if (subTable[x, y] != -1 && subTable[x, y] != -2)
 				subTable[x, y] += (enNb != 0 ? enNb : alNb) * (enNb != 0 ? enNb : alNb) + (enNb != 0 ? 0 : 1);
+			if (y == line[3] && x == line[2])
+				break;
 			x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
 			y += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
 		}
@@ -211,19 +218,19 @@ class GomocupEngine : GomocupInterface
 			int alNb = 0;
 			int enNb = 0;
 			int emNb = 0;
-			while (y != line[3] || x != line[2])
+			while (true)
 			{
 				switch (subTable[x, y])
 				{
 					case -1:
 						if (alNb != 0 && emNb != 0)
-							SetBack(ref subTable, line, ref alNb, ref enNb, ref emNb);
+							SetBack(ref subTable, line, ref enNb, ref alNb, ref emNb);
 						enNb += 1;
 						alNb = 0;
 						break;
 					case -2:
 						if (enNb != 0 && emNb != 0)
-							SetBack(ref subTable, line, ref alNb, ref enNb, ref emNb);
+							SetBack(ref subTable, line, ref enNb, ref alNb, ref emNb);
 						alNb += 1;
 						enNb = 0;
 						break;
@@ -233,17 +240,19 @@ class GomocupEngine : GomocupInterface
 						emNb += 1;
 						break;
 				}
+				if (y == line[3] && x == line[2])
+					break;
 				x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
 				y += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
 			}
 			if (emNb != 0)
-				SetBack(ref subTable, line, ref alNb, ref enNb, ref emNb);
+				SetBack(ref subTable, line, ref enNb, ref alNb, ref emNb);
 		}
 	}
 
 	private int[] SetResBoard(int[][,] resTable)
 	{
-		int[,] finalTable = new int[width,height];
+		int[,] finalTable = board;
 		int id = 0;
 		int max = 0;
 		int[] maxSquare = new int[2];
@@ -254,12 +263,16 @@ class GomocupEngine : GomocupInterface
 			{
 				for (int x = 0; x != 5; x++)
 				{
-					finalTable[id % (width - 4), id / (height - 4)] += resTable[id][x, y];
-					if (finalTable[id % (width - 4), id / (height - 4)] > max)
+					if (finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] != -1 &&
+						finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] != -2 && resTable[id][x, y] != 0)
 					{
-						max = finalTable[id % (width - 4), id / (height - 4)];
-						maxSquare[0] = id % (width - 4);
-						maxSquare[1] = id / (height - 4);
+						finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] += resTable[id][x, y];
+					}
+					if (finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] > max)
+					{
+						max = finalTable[id % (width - 4) + x, id / (height - 4) + y];
+						maxSquare[0] = id % (width - 4) + x;
+						maxSquare[1] = id / (height - 4) + y;
 					}
 				}
 			}
@@ -278,19 +291,22 @@ class GomocupEngine : GomocupInterface
 
 	public void PrintBoard(int[,] board)
 	{
-		for (int y = 0; y != height; y++)
+		int Size = 0;
+		if (board.Length == 25)
+			Size = 5;
+		else if (board.Length == 19 * 19)
+			Size = 19;
+		for (int y = 0; y != Size; y++)
 		{
-			for (int x = 0; x != width; x++)
+			for (int x = 0; x != Size; x++)
 			{
 				Console.Write(board[x, y]);
-				if (board[x, y] >= 10)
+				if (board[x, y] < 0)
 					Console.Write(" ");
-				if (board[x, y] >= 100)
+				else if (board[x, y] < 10)
+					Console.Write("  ");
+				else if (board[x, y] < 100)
 					Console.Write(" ");
-				if (board[x, y] >= 1000)
-					Console.Write(" ");
-				if (board[x, y] >= 10000)
-					Console.Write("error");
 			}
 			Console.Write("\n");
 		}
