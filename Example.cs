@@ -185,46 +185,50 @@ class GomocupEngine : GomocupInterface
 	{
 		int y = line[1];
 		int x = line[0];
-        while (true)
-        {
-            if (subTable[x, y] != (enNb != 0 ? -1 : -2))
-            {
-                int after = 0;
-                int before = 0;
-                int x2 = x;
-                int y2 = y;
-                while (true)
-                {
-                    if (subTable[x2, y2] != (enNb != 0 ? -1 : -2))
-                        after++;
-                    else
-                        break;
-                    if ((y2 == line[3] && x2 == line[2]))
-                        break;
-                    x2 += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
-                    y2 += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
-                }
-                x2 = x;
-                y2 = y;
-                while (true)
-                {
-                    if (subTable[x2, y2] != (enNb != 0 ? -1 : -2))
-                        before++;
-                    else
-                        break;
-                    if ((y2 == line[1] && x2 == line[0]))
-                        break;
-                    x2 -= (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
-                    y2 -= (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
-                }
-                subTable[x, y] += MyPower((enNb != 0 ? enNb : alNb) + (1 / MyPower(2, MyPower(after < before ? after : before, 2))), 2) + (alNb != 0 ? 1 : 0);
-            }
-            if (y == line[3] && x == line[2])
+		while (true)
+		{
+			if (subTable[x, y] != (enNb != 0 ? -1 : -2))
+			{
+				int after = 0;
+				int before = 0;
+				int x2 = x;
+				int y2 = y;
+				while (true)
+				{
+					if (subTable[x2, y2] != (enNb != 0 ? -1 : -2))
+						after++;
+					else
+						break;
+					if ((y2 == line[3] && x2 == line[2]))
+						break;
+					x2 += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
+					y2 += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
+				}
+				x2 = x;
+				y2 = y;
+				while (true)
+				{
+					if (subTable[x2, y2] != (enNb != 0 ? -1 : -2))
+						before++;
+					else
+						break;
+					if ((y2 == line[1] && x2 == line[0]))
+						break;
+					x2 -= (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
+					y2 -= (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
+				}
+				if ((y == line[1] && x == line[0]))
+					before = 0;
+				if ((y == line[3] && x == line[2]))
+					after = 0;
+				subTable[x, y] += MyPower((enNb != 0 ? enNb : alNb) + (2 - Math.Sqrt(after < before ? after : before)), 2);
+			}
+			if (y == line[3] && x == line[2])
 				break;
 			x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
 			y += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
 		}
-    }
+	}
 
 	private void FillSubTable(ref double[,] subTable)
 	{
