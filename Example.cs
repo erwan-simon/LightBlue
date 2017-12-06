@@ -8,7 +8,7 @@ class GomocupEngine : GomocupInterface
     int[,] board = new int[MAX_BOARD, MAX_BOARD];
 
 	Random rand = new Random();
-	int[][] lines = new int[28][];
+	int[][] lines = new int[12][];
 
 	public override string brain_about
 	{
@@ -38,7 +38,7 @@ class GomocupEngine : GomocupInterface
 		lines[12] = new[] {2, 0, 4, 2};
 		lines[13] = new[] {1, 0, 4, 3};*/
 		lines[10] = new[] {0, 0, 4, 4};
-		/*lines[15] = new[] {0, 1, 3, 4};
+        /*lines[15] = new[] {0, 1, 3, 4};
 		lines[16] = new[] {0, 2, 2, 4};
 		lines[17] = new[] {0, 3, 1, 4};
 		lines[18] = new[] {0, 4, 0, 4}; // une seule case
@@ -47,12 +47,12 @@ class GomocupEngine : GomocupInterface
 		lines[20] = new[] {0, 1, 1, 0};
 		lines[21] = new[] {0, 2, 2, 0};
 		lines[22] = new[] {0, 3, 3, 0};*/
-		lines[11] = new[] {0, 4, 4, 0};
-		/*lines[24] = new[] {1, 4, 4, 1};
+        lines[11] = new[] {0, 4, 4, 0};
+        /*lines[24] = new[] {1, 4, 4, 1};
 		lines[25] = new[] {2, 4, 4, 2};
 		lines[26] = new[] {3, 4, 4, 3};
 		lines[27] = new[] {4, 4, 4, 4}; // une seule case*/
-	}
+    }
 
 	public override void brain_init()
 	{
@@ -108,7 +108,8 @@ class GomocupEngine : GomocupInterface
 		}
 	}
 
-	public override void brain_block(int x, int y)
+	public override void brain_block(int x
+        , int y)
 	{
 		if (isFree(x, y))
 		{
@@ -157,6 +158,7 @@ class GomocupEngine : GomocupInterface
         int weight = 0;
         double[,] resTable = new double[height, width];
         int[] res = FinalDecision();
+        return res;
 	}
 
     private int[] FinalDecision()
@@ -177,8 +179,8 @@ class GomocupEngine : GomocupInterface
             FillResTable(ref resTable, subTable, id);
         }
         List<int[]> resPos = new List<int[]>();
-        int max = TakeBestOnes(resTable, resPos);
-        if (resPos.Count > 1)
+        double max = TakeBestOnes(resTable, ref resPos);
+        /*if (resPos.Count > 1)
         {
             int max2 = 0;
             int[] res = new int[2];
@@ -193,35 +195,42 @@ class GomocupEngine : GomocupInterface
             }
             return res;
         }
-        else
+        else*/
             return resPos[0];
     }
 
-    private int TakeBestOnes(double[,] resTable, List<int[]> resPos)
+    private double TakeBestOnes(double[,] resTable, ref List<int[]> resPos)
     {
-        int max = 0;
-        int[] pos = new int[2];
-
+        double max = 0;
+        
         for (int y = 0; y != height; y++)
         {
             for (int x = 0; x != width; x++)
             {
                 if (resTable[x, y] != -1 && resTable[x, y] != -2)
                 {
-                    pos[0] = x;
-                    pos[1] = y;
                     if (resTable[x, y] > max)
                     {
+                        int[] pos = new int[2];
+                        pos[0] = x;
+                        pos[1] = y;
                         resPos.Clear();
                         resPos.Add(pos);
+                        max = resTable[x, y];
                     }
                     else if (resTable[x, y] == max)
+                    {
+                        int[] pos = new int[2];
+                        pos[0] = x;
+                        pos[1] = y;
                         resPos.Add(pos);
+                    }
                 }
             }
         }
         if (max == 0)
         {
+            int[] pos = new int[2];
             do
             {
                 pos[0] = rand.Next(width);
@@ -235,9 +244,9 @@ class GomocupEngine : GomocupInterface
 
     private void FillResTable(ref double[,] resTable, double[,] subTable, int id)
     {
-        for (int y = 0; y != height; y++)
+        for (int y = 0; y != 5; y++)
         {
-            for (int x = 0; x!= width; x++)
+            for (int x = 0; x != 5; x++)
             {
                 if (subTable[x, y] != -1 && subTable[x, y] != -2 && resTable[(id % (width - 4)) + x, (id / (height - 4)) + y] < subTable[x, y])
                     resTable[(id % (width - 4)) + x, (id / (height - 4)) + y] = subTable[x, y];
@@ -255,7 +264,7 @@ class GomocupEngine : GomocupInterface
             FillResTable(ref resTable, subTable, id);
         }
         List<int[]> resPos = new List<int[]>();
-        int max = TakeBestOnes(resTable, resPos);
+        double max = TakeBestOnes(resTable, ref resPos);
         if (resPos.Count > 1)
         {
             int max2 = 0;
@@ -269,10 +278,11 @@ class GomocupEngine : GomocupInterface
                     res = tempPos;
                 }
             }
-            return res;
+            //return res;
         }
-        else
-            return resPos[0];
+        //else
+        //return resPos[0];
+        return 0;
     }
 
 	private void ReturnSubTable(int id, ref double[,] subTable)
@@ -293,7 +303,7 @@ class GomocupEngine : GomocupInterface
 
 	private void SetBack(ref double[,] subTable, int[] line, ref int enNb, ref int alNb, ref int emNb)
 	{
-		int y = line[1];
+        int y = line[1];
 		int x = line[0];
 		while (true)
 		{
@@ -301,26 +311,64 @@ class GomocupEngine : GomocupInterface
 			{
                 int x2 = x;
                 int y2 = y;
-
-
+                int before = 0;
+                int after = 0;
+                //Console.WriteLine("MESSAGE 0) x0 = " + line[0] + " | y0 = " + line[1] + " | x1 = " + line[2] + " | y1 = " + line[3]);
+                while (true)
+                {
+                    if (y2 == line[3] && x2 == line[2])
+                        break;
+                    //Console.WriteLine("MESSAGE 1) x2 = " + x2 + " | y2 = " + y2);
+                    x2 += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
+                    y2 += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
+                    //Console.WriteLine("MESSAGE 2) x2 = " + x2 + " | y2 = " + y2);
+                    if (subTable[x2, y2] != (enNb != 0 ? -1 : -2))
+                        break;
+                    else
+                        after++;
+                }
+                x2 = x;
+                y2 = y;
+                while (true)
+                {
+                    if (y2 == line[1] && x2 == line[0])
+                        break;
+                    //Console.WriteLine("MESSAGE 3) x2 = " + x2 + " | y2 = " + y2);
+                    x2 -= (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
+                    y2 -= (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
+                    //Console.WriteLine("MESSAGE 4) x2 = " + x2 + " | y2 = " + y2);
+                    if (subTable[x2, y2] != (enNb != 0 ? -1 : -2))
+                        break;
+                    else
+                        before++;
+                }
+                if (before + after != 0)
+                {
+                    subTable[x, y] = before + after + 1;
+                    if (before + after > 3)
+                    {
+                        Console.WriteLine("MESSAGE subtable[" + x + "," + y + "] = " + (before + after + 1));
+                        PrintBoard(subTable);
+                    }
+                }
             }
 			if (y == line[3] && x == line[2])
 				break;
 			x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
 			y += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
 		}
-	}
+    }
 
 	private void FillSubTable(ref double[,] subTable)
 	{
-		foreach (int[] line in lines)
+        foreach (int[] line in lines)
 		{
-			int y = line[1];
+            int y = line[1];
 			int x = line[0];
-			int alNb = 0;
+            int alNb = 0;
 			int enNb = 0;
 			int emNb = 0;
-			while (true)
+            while (true)
 			{
                 switch (subTable[x, y])
                 {
@@ -341,13 +389,14 @@ class GomocupEngine : GomocupInterface
 				x += (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
 				y += (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
 			}
-			if (emNb != 5 && (enNb + emNb == 5 || alNb + emNb == 5))
-				SetBack(ref subTable, line, ref enNb, ref alNb, ref emNb);
-		}
-	}
+            if (emNb != 5 && (enNb + emNb == 5 || alNb + emNb == 5))
+                SetBack(ref subTable, line, ref enNb, ref alNb, ref emNb);
+        }
+    }
 
 	public void PrintBoard(double[,] board)
 	{
+        string temp = "";
 		int Size = 0;
 		if (board.Length == 25)
 			Size = 5;
@@ -357,13 +406,14 @@ class GomocupEngine : GomocupInterface
 		{
 			for (int x = 0; x != Size; x++)
 			{
-				Console.Write(board[x, y] * -1);
-				Console.Write(" ");
+				temp += board[x, y];
+                temp += " ";
 			}
-			Console.Write("\n");
-		}
-		Console.WriteLine("\n");
-	}
+            Console.WriteLine("MESSAGE " + temp);
+            temp = "";
+        }
+        Console.WriteLine("MESSAGE ");
+    }
 
 	private double MyPower(double nb, double power)
 	{
