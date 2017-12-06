@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Security.Policy;
+using System.Collections.Generic;
 
 class GomocupEngine : GomocupInterface
 {
 	const int MAX_BOARD = 100;
-	int[,] board = new int[MAX_BOARD, MAX_BOARD];
+    int[,] board = new int[MAX_BOARD, MAX_BOARD];
+
 	Random rand = new Random();
 	int[][] lines = new int[28][];
 
@@ -31,12 +33,12 @@ class GomocupEngine : GomocupInterface
 		lines[8] = new[] {3, 0, 3, 4};
 		lines[9] = new[] {4, 0, 4, 4};
 		// diags (top left -> bottom right)
-		lines[10] = new[] {4, 0, 4, 0}; // une seule case
+		/*lines[10] = new[] {4, 0, 4, 0}; // une seule case
 		lines[11] = new[] {3, 0, 4, 1};
 		lines[12] = new[] {2, 0, 4, 2};
-		lines[13] = new[] {1, 0, 4, 3};
-		lines[14] = new[] {0, 0, 4, 4};
-		lines[15] = new[] {0, 1, 3, 4};
+		lines[13] = new[] {1, 0, 4, 3};*/
+		lines[10] = new[] {0, 0, 4, 4};
+		/*lines[15] = new[] {0, 1, 3, 4};
 		lines[16] = new[] {0, 2, 2, 4};
 		lines[17] = new[] {0, 3, 1, 4};
 		lines[18] = new[] {0, 4, 0, 4}; // une seule case
@@ -44,12 +46,12 @@ class GomocupEngine : GomocupInterface
 		lines[19] = new[] {0, 0, 0, 0}; // une seule case
 		lines[20] = new[] {0, 1, 1, 0};
 		lines[21] = new[] {0, 2, 2, 0};
-		lines[22] = new[] {0, 3, 3, 0};
-		lines[23] = new[] {0, 4, 4, 0};
-		lines[24] = new[] {1, 4, 4, 1};
+		lines[22] = new[] {0, 3, 3, 0};*/
+		lines[11] = new[] {0, 4, 4, 0};
+		/*lines[24] = new[] {1, 4, 4, 1};
 		lines[25] = new[] {2, 4, 4, 2};
 		lines[26] = new[] {3, 4, 4, 3};
-		lines[27] = new[] {4, 4, 4, 4}; // une seule case
+		lines[27] = new[] {4, 4, 4, 4}; // une seule case*/
 	}
 
 	public override void brain_init()
@@ -130,8 +132,6 @@ class GomocupEngine : GomocupInterface
 
 	public override void brain_turn()
 	{
-		int i;
-		i = -1;
 		int[] res = new int[2];
         res[0] = -1;
         res[1] = -1;
@@ -139,7 +139,6 @@ class GomocupEngine : GomocupInterface
 		{
             res = Algo();
         } while (!isFree(res[0], res[1]));
-		//if (i > 1) Console.WriteLine("DEBUG {0} coordinates didn't hit an empty field", i);
 		do_mymove(res[0], res[1]);
 	}
 
@@ -153,17 +152,128 @@ class GomocupEngine : GomocupInterface
 
     // ALGO
 
-	public int[] Algo()
+	private int[] Algo()
 	{
-		double[][,] resTable = new double[(width - 4) * (height - 4)][,];
-		for (int id = 0; id != (width - 4) * (height - 4); id++)
-		{
-			resTable[id] = new double[5, 5];
-			ReturnSubTable(id, ref resTable[id]);
-			FillSubTable(ref resTable[id]);
-		}
-		return SetResBoard(resTable);
+        int weight = 0;
+        double[,] resTable = new double[height, width];
+        int[] res = FinalDecision();
 	}
+
+    private int[] FinalDecision()
+    {
+        double[,] resTable = new double[height, width];
+        for (int y = 0; y != height; y++)
+        {
+            for(int x = 0; x!= width; x++)
+            {
+                resTable[x, y] = board[x, y];
+            }
+        }
+        for (int id = 0; id != (width - 4) * (height - 4); id++)
+        {
+            double[,] subTable = new double[5, 5];
+            ReturnSubTable(id, ref subTable);
+            FillSubTable(ref subTable);
+            FillResTable(ref resTable, subTable, id);
+        }
+        List<int[]> resPos = new List<int[]>();
+        int max = TakeBestOnes(resTable, resPos);
+        if (resPos.Count > 1)
+        {
+            int max2 = 0;
+            int[] res = new int[2];
+            foreach (int[] pos in resPos)
+            {
+                int temp = TreePossibility(resTable, pos, -1, 0);
+                if (temp >= max2)
+                {
+                    max2 = temp;
+                    res = pos;
+                }
+            }
+            return res;
+        }
+        else
+            return resPos[0];
+    }
+
+    private int TakeBestOnes(double[,] resTable, List<int[]> resPos)
+    {
+        int max = 0;
+        int[] pos = new int[2];
+
+        for (int y = 0; y != height; y++)
+        {
+            for (int x = 0; x != width; x++)
+            {
+                if (resTable[x, y] != -1 && resTable[x, y] != -2)
+                {
+                    pos[0] = x;
+                    pos[1] = y;
+                    if (resTable[x, y] > max)
+                    {
+                        resPos.Clear();
+                        resPos.Add(pos);
+                    }
+                    else if (resTable[x, y] == max)
+                        resPos.Add(pos);
+                }
+            }
+        }
+        if (max == 0)
+        {
+            do
+            {
+                pos[0] = rand.Next(width);
+                pos[1] = rand.Next(height);
+            } while (!isFree(pos[0], pos[1]));
+            resPos.Clear();
+            resPos.Add(pos);
+        }
+        return max;
+    }
+
+    private void FillResTable(ref double[,] resTable, double[,] subTable, int id)
+    {
+        for (int y = 0; y != height; y++)
+        {
+            for (int x = 0; x!= width; x++)
+            {
+                if (subTable[x, y] != -1 && subTable[x, y] != -2 && resTable[(id % (width - 4)) + x, (id / (height - 4)) + y] < subTable[x, y])
+                    resTable[(id % (width - 4)) + x, (id / (height - 4)) + y] = subTable[x, y];
+            }
+        }
+    }
+
+    private int TreePossibility(double[,] resTable, int[] pos, int whoAmI, int level)
+    {
+        for (int id = 0; id != (width - 4) * (height - 4); id++)
+        {
+            double[,] subTable = new double[5, 5];
+            ReturnSubTable(id, ref subTable);
+            FillSubTable(ref subTable);
+            FillResTable(ref resTable, subTable, id);
+        }
+        List<int[]> resPos = new List<int[]>();
+        int max = TakeBestOnes(resTable, resPos);
+        if (resPos.Count > 1)
+        {
+            int max2 = 0;
+            int[] res = new int[2];
+            foreach (int[] tempPos in resPos)
+            {
+                int temp = TreePossibility(resTable, tempPos, -1, 0);
+                if (temp >= max2)
+                {
+                    max2 = temp;
+                    res = tempPos;
+                }
+            }
+            return res;
+        }
+        else
+            return resPos[0];
+    }
 
 	private void ReturnSubTable(int id, ref double[,] subTable)
 	{
@@ -189,18 +299,10 @@ class GomocupEngine : GomocupInterface
 		{
 			if (subTable[x, y] != (enNb != 0 ? -1 : -2))
 			{
-				bool after = false;
-				bool before = false;
-				if ((y != line[1] || x != line[0]) &&
-                    subTable[x - (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0)), y - (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0))] == (enNb != 0 ? -1 : -2))
-                    before = true;
-				if ((y != line[3] || x != line[2]) &&
-                    subTable[x + (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0)), y + (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0))] == (enNb != 0 ? -1 : -2))
-                    after = true;
-                if (subTable[line[0], line[1]] != (enNb != 0 ? -1 : -2) && subTable[line[2], line[3]] != (enNb != 0 ? -1 : -2) && (enNb != 0 ? enNb : alNb) == 3)
-                    subTable[x, y] = MyPower((enNb != 0 ? enNb : alNb), 3) + 0.5;
-                else if (before == true || after == true)
-                    subTable[x, y] = MyPower((enNb != 0 ? enNb : alNb), 3) + 0.25;
+                int x2 = x;
+                int y2 = y;
+
+
             }
 			if (y == line[3] && x == line[2])
 				break;
@@ -242,54 +344,6 @@ class GomocupEngine : GomocupInterface
 			if (emNb != 5 && (enNb + emNb == 5 || alNb + emNb == 5))
 				SetBack(ref subTable, line, ref enNb, ref alNb, ref emNb);
 		}
-	}
-
-	private int[] SetResBoard(double[][,] resTable)
-	{
-		double[,] finalTable = new double[width, height];
-		int id = 0;
-		double max = 0;
-		int[] maxSquare = new int[2];
-
-		for (int y = 0; y != height; y++)
-		{
-			for (int x = 0; x != width; x++)
-			{
-				finalTable[x, y] = board[x, y];
-			}
-		}
-		while (id != (width - 4) * (height - 4))
-		{
-			for (int y = 0; y != 5; y++)
-			{
-				for (int x = 0; x != 5; x++)
-				{
-					if (finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] != -1 &&
-						finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] != -2 && resTable[id][x, y] != 0)
-					{
-                        if (resTable[id][x, y] > finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y])
-						    finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] = resTable[id][x, y];
-					}
-					if (finalTable[(id % (width - 4)) + x, (id / (height - 4)) + y] > max)
-					{
-						max = finalTable[id % (width - 4) + x, id / (height - 4) + y];
-						maxSquare[0] = id % (width - 4) + x;
-						maxSquare[1] = id / (height - 4) + y;
-					}
-				}
-			}
-			id++;
-		}
-		if (max == 0)
-		{
-			do
-			{
-				maxSquare[0] = rand.Next(width);
-				maxSquare[1] = rand.Next(height);
-			} while (!isFree(maxSquare[0], maxSquare[1]));
-		}
-		//PrintBoard(finalTable);
-		return maxSquare;
 	}
 
 	public void PrintBoard(double[,] board)
