@@ -14,7 +14,7 @@ class GomocupEngine : GomocupInterface
 	{
 		get
 		{
-			return "name=\"ArcadeV42\", author=\"Machin Truc\", version=\"2.1\", country=\"France\", www=\"http://talkaround.io\"";
+			return "name=\"ArcadeV42\", author=\"Machin Truc\", version=\"2.3\", country=\"France\", www=\"http://talkaround.io\"";
 		}
 	}
 
@@ -72,6 +72,11 @@ class GomocupEngine : GomocupInterface
 			Console.WriteLine("ERROR Maximal board size is " + MAX_BOARD);
 			return;
 		}
+        if (width != height)
+        {
+            Console.WriteLine("ERROR Board is not a square");
+            return;
+        }
 		FillLines();
 		Console.WriteLine("OK");
 	}
@@ -196,14 +201,14 @@ class GomocupEngine : GomocupInterface
         List<int[]> enPos = new List<int[]>();
         double alMax = TakeBestOnes(alTable, ref alPos);
         double enMax = TakeBestOnes(enTable, ref enPos);
-        /*Console.WriteLine("MESSAGE ally:");
+        Console.WriteLine("MESSAGE ally:");
         PrintBoard(alTable);
         Console.WriteLine("MESSAGE enemy:");
         PrintBoard(enTable);
         if (alMax >= enMax)
             Console.WriteLine("MESSAGE ally won");
         else
-            Console.WriteLine("MESSAGE enemy won");*/
+            Console.WriteLine("MESSAGE enemy won");
         if ((alMax >= enMax ? alPos.Count : enPos.Count) > 1)
         {
             double max = 0;
@@ -222,14 +227,62 @@ class GomocupEngine : GomocupInterface
         if (alMax >= enMax)
             return (alPos[rand.Next(alPos.Count)]);
         return (enPos[rand.Next(enPos.Count)]);
+    }
 
-        /*if (alMax >= enMax)
+    private int TreePossibilities(int[,] myBoard, int[] pawnPos, int whoAmI)
+    {
+        int[,] myBoard2 = new int[height, width];
+        for (int y = 0; y != height; y++)
         {
-            Console.WriteLine("MESSAGE ally won");
-            return alPos[alPos.Count - 1];
+            for (int x = 0; x != width; x++)
+            {
+                myBoard2[x, y] = myBoard[x, y];
+                if (pawnPos[0] == x && pawnPos[1] == y)
+                    myBoard2[x, y] = whoAmI;
+            }
         }
-        Console.WriteLine("MESSAGE enemy won");
-        return enPos[enPos.Count - 1];*/
+        double[,] enTable = new double[height, width];
+        double[,] alTable = new double[height, width];
+        for (int y = 0; y != height; y++)
+        {
+            for(int x = 0; x!= width; x++)
+            {
+                enTable[x, y] = myBoard[x, y];
+                alTable[x, y] = myBoard[x, y];
+            }
+        }
+        for (int id = 0; id != (width - 5) * (height - 5); id++)
+        {
+            double[,] subTable = new double[6, 6];
+            ReturnSubTable(id, ref subTable);
+            FillSubTable(ref subTable, -1);
+            FillResTable(ref enTable, subTable, id);
+        }
+        for (int id = 0; id != (width - 5) * (height - 5); id++)
+        {
+            double[,] subTable = new double[6, 6];
+            ReturnSubTable(id, ref subTable);
+            FillSubTable(ref subTable, -2);
+            FillResTable(ref alTable, subTable, id);
+        }
+        List<int[]> alPos = new List<int[]>();
+        List<int[]> enPos = new List<int[]>();
+        double alMax = TakeBestOnes(alTable, ref alPos);
+        if (alMax >= 1000)
+            return 1;
+        double enMax = TakeBestOnes(enTable, ref enPos);
+        if (enMax >= 1000)
+            return -1;
+        if ((alMax >= enMax ? alPos.Count : enPos.Count) > 1)
+        {
+            int max = 0;
+            foreach (int[] pos in (alMax >= enMax ? alPos : enPos))
+            {
+                max += TreePossibilities(myBoard2, pos, whoAmI == -1 ? -2 : -1);
+            }
+            return max;
+        }
+        return ((alMax >= enMax ? 1 : -1));
     }
 
     private double TakeBestOnes(double[,] resTable, ref List<int[]> resPos)
@@ -362,7 +415,10 @@ class GomocupEngine : GomocupInterface
                     else if (count == 2 && (before == true ? 0.5 : 0) + (after == true ? 0.5 : 0) == 1)
                         subTable[x,  y] += 10; // almost decisive move has more or less priority
                     else*/
-                    subTable[x, y] += MyPower(count + (before == true ? 0.5 : 0) + (after == true ? 0.5 : 0), 2) + (whoAmI == -1 ? 0 : 1);
+                    else
+                    {
+                        subTable[x, y] += MyPower(count + (before == true ? 0.5 : 0) + (after == true ? 0.5 : 0), 2) + (whoAmI == -1 ? 0 : 1);
+                    }
                 }
             }
 			if (y == line[3] && x == line[2])
@@ -409,8 +465,8 @@ class GomocupEngine : GomocupInterface
                 print = true;
             }
         }
-        /*if (print)
-            PrintBoard(subTable);*/
+        if (print)
+            PrintBoard(subTable);
     }
 
 	public void PrintBoard(double[,] board)
