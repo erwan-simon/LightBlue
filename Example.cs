@@ -14,7 +14,7 @@ class GomocupEngine : GomocupInterface
 	{
 		get
 		{
-			return "name=\"ArcadeV42\", author=\"Machin Truc\", version=\"1.1\", country=\"France\", www=\"http://talkaround.io\"";
+			return "name=\"ArcadeV42\", author=\"Machin Truc\", version=\"2.1\", country=\"France\", www=\"http://talkaround.io\"";
 		}
 	}
 
@@ -303,7 +303,7 @@ class GomocupEngine : GomocupInterface
 		}
 	}
 
-	private void SetBack(ref double[,] subTable, int[] line, int enNb, int alNb, int emNb, int whoAmI)
+	private void SetBack(ref double[,] subTable, int[] line, int whoAmI)
 	{
         int y = line[1];
 		int x = line[0];
@@ -339,7 +339,7 @@ class GomocupEngine : GomocupInterface
                 {
                     if (y2 == line[1] && x2 == line[0])
                         break;
-                    //Console.WriteLine("MESSAGE 3) x2 = " + x2 + " | y2 = " + y2);
+                   //Console.WriteLine("MESSAGE 3) x2 = " + x2 + " | y2 = " + y2);
                     x2 -= (line[0] < line[2] ? 1 : (line[0] > line[2] ? -1 : 0));
                     y2 -= (line[1] < line[3] ? 1 : (line[1] > line[3] ? -1 : 0));
                     //Console.WriteLine("MESSAGE 4) x2 = " + x2 + " | y2 = " + y2);
@@ -353,12 +353,16 @@ class GomocupEngine : GomocupInterface
                 }
                 if (count != 0)
                 {
-                    subTable[x, y] = MyPower(count, 2) + (before == true ? 1 : 0) + (after == true ? 1 : 0);
-                    /*if (count > 3)
-                    {
-                        Console.WriteLine("MESSAGE subtable[" + x + "," + y + "] = " + count + (before == true ? 1 : 0) + (after == true ? 1 : 0));
-                        PrintBoard(subTable);
-                    }*/
+                    if (count == 4)
+                        subTable[x, y] += 10000; // winning move has top priority
+                    else if (count == 3 && (before == true ? 0.5 : 0) + (after == true ? 0.5 : 0) == 1)
+                        subTable[x, y] += 1000; // decisive move has priority
+                    /*else if (count == 3)
+                        subTable[x, y] += 100;
+                    else if (count == 2 && (before == true ? 0.5 : 0) + (after == true ? 0.5 : 0) == 1)
+                        subTable[x,  y] += 10; // almost decisive move has more or less priority
+                    else*/
+                    subTable[x, y] += MyPower(count + (before == true ? 0.5 : 0) + (after == true ? 0.5 : 0), 2) + (whoAmI == -1 ? 0 : 1);
                 }
             }
 			if (y == line[3] && x == line[2])
@@ -370,7 +374,7 @@ class GomocupEngine : GomocupInterface
 
 	private void FillSubTable(ref double[,] subTable, int whoAmI)
 	{
-        //bool print = false;
+        bool print = false;
         foreach (int[] line in lines)
 		{
             int y = line[1];
@@ -401,8 +405,8 @@ class GomocupEngine : GomocupInterface
 			}
             if (emNb < 5 && (whoAmI == -1 ? enNb : alNb) + emNb >= 5 && ((whoAmI == -1 ? alNb : enNb) == 0 || subTable[line[0], line[1]] == (whoAmI == -1 ? -2 : -1) || subTable[line[2], line[3]] == (whoAmI == -1 ? -2 : -1)))
             {
-                SetBack(ref subTable, line, enNb, alNb, emNb, whoAmI);
-                //print = true;
+                SetBack(ref subTable, line, whoAmI);
+                print = true;
             }
         }
         /*if (print)
@@ -411,7 +415,7 @@ class GomocupEngine : GomocupInterface
 
 	public void PrintBoard(double[,] board)
 	{
-        string temp = "";
+        string temp = "";   
 		int Size = 0;
 		if (board.Length == 6 * 6)
 			Size = 6;
