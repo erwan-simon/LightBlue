@@ -18,6 +18,17 @@ My bot is usable in the software [Pisvork](http://gomocup.org/download-gomocup-m
 6. Enter the path to the LightBlue executable.
 7. Enjoy !
 
+### Linux
+
+1. Download Pisvork [here](http://petr.lastovicka.sweb.cz/piskvork.zip).
+2. Install wine following [theses](https://wiki.winehq.org/Ubuntu) instructions.
+3. Launch `wine piskvork` in the Pisvork directory.
+4. Open 'Players' option pannel.
+5. Open 'Settings'.
+6. Toggle at least one computer player.
+7. Enter the path to the LightBlue executable.
+8. Enjoy !
+
 ## Technical considerations
 
 - Language : C#.NET
