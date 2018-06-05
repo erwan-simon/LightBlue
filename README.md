@@ -10,7 +10,7 @@ My bot is usable in the software [Pisvork](http://gomocup.org/download-gomocup-m
 
 ### Windows
 
-1. Download Pisvork [here](petr.lastovicka.sweb.cz/piskvork.zip).
+1. Download Pisvork [here](http://petr.lastovicka.sweb.cz/piskvork.zip).
 2. Launch pisvork.exe.
 3. Open 'Players' option pannel.
 4. Open 'Settings'.
