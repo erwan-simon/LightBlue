@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security.Policy;
 using System.Collections.Generic;
 
@@ -166,7 +166,7 @@ class GomocupEngine : GomocupInterface
     {
     }
 
-  // ALGO
+    // ALGO
 
     private int[] Algo()
     {
