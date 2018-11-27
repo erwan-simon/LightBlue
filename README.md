@@ -21,7 +21,7 @@ My bot is usable in the software [Pisvork](http://gomocup.org/download-gomocup-m
 ### Linux
 
 1. Download Pisvork [here](http://petr.lastovicka.sweb.cz/piskvork.zip).
-2. Install wine following [theses](https://wiki.winehq.org/Ubuntu) instructions.
+2. Install wine.
 3. Launch `wine piskvork` in the Pisvork directory.
 4. Open 'Players' option pannel.
 5. Open 'Settings'.
